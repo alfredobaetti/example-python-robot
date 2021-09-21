@@ -78,10 +78,21 @@ def write_table_to_excel(table):
     time.sleep(15)
 
 def download_UII_pdf():
-    UII = driver.find_element('//*[@id="investments-table-object"]/tbody/tr/td[1]/a')
-
+    UII = driver.find_elements('//*[@id="investments-table-object"]/tbody/tr/td[1]/a')
+    current_page = driver.get_location()
     for i in range(len(UII)):
-        UII[i].click()
+        #driver.open_chrome_browser(UII[i])
+        #link = UII[i].get_attribute("href")
+        UII = driver.find_elements('//*[@id="investments-table-object"]/tbody/tr/td[1]/a')
+        driver.click_link(UII[i])
+
+        uii_pdf = driver.click_element_when_visible('//*[@id="business-case-pdf"]/a')
+
+        time.sleep(5)
+
+        driver.go_to(current_page)
+
+        time.sleep(10)
 
 
 
