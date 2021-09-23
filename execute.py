@@ -1,5 +1,3 @@
-import os
-from re import U
 from itdashboard import Challenge
 from agencies import ID
 

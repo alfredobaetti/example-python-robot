@@ -1,9 +1,7 @@
 from RPA.Browser.Selenium import Selenium
 from RPA.Excel.Files import Files
-#from RPA.PDF import PDF
 import time
 import os
-import re
 import pandas as pd
 
 
@@ -28,9 +26,13 @@ class Challenge:
         time.sleep(5)
         AGENCIES = []
         AMOUNTS = []
-
-        agencies = self.driver.find_elements('//div[@id="agency-tiles-widget"]//span[@class="h4 w200"]')
-        amounts = self.driver.find_elements('//div[@id="agency-tiles-widget"]//span[@class=" h1 w900"]')
+        while True:
+            try:
+                agencies = self.driver.find_elements('//div[@id="agency-tiles-widget"]//span[@class="h4 w200"]')
+                amounts = self.driver.find_elements('//div[@id="agency-tiles-widget"]//span[@class=" h1 w900"]')
+                break
+            except:
+                pass
 
         for i in range(len(agencies)):
             AGENCIES.append(agencies[i].text)
@@ -62,17 +64,20 @@ class Challenge:
                 pass
 
         while True:
-            if self.driver.find_element('investments-table-object_next').get_attribute("class") == 'paginate_button next disabled':
-                inv_table = self.driver.find_element('//table[@id="investments-table-object"]')
-                self.write_table_to_excel(inv_table)
-                break
+            try:
+                if self.driver.find_element('investments-table-object_next').get_attribute("class") == 'paginate_button next disabled':
+                    inv_table = self.driver.find_element('//table[@id="investments-table-object"]')
+                    self.write_table_to_excel(inv_table)
+                    break
+            except:
+                pass
 
 
     def write_table_to_excel(self,table):
         tab_html = table.get_attribute('outerHTML')
         tab_dfs = pd.read_html(tab_html)
 
-        file = self.excel.open_workbook(f"challenge.xlsx")
+        file = self.excel.open_workbook(f"output/challenge.xlsx")
         file.create_worksheet("Individual Investments")
         # df = pd.DataFrame(columns=tab_dfs[0].columns)
 
@@ -81,7 +86,7 @@ class Challenge:
 
         #file.append_worksheet("Individual Investments", tab_dfs[0])
 
-        with pd.ExcelWriter('challenge.xlsx', mode='a') as writer:  
+        with pd.ExcelWriter('output/challenge.xlsx', mode='a') as writer:  
             tab_dfs[0].to_excel(writer, sheet_name='Individual Investments')
 
 
