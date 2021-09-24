@@ -1,9 +1,9 @@
 tasks:
-  Challenge (Robot Framework):
-    shell: python -m robot --report NONE --outputdir output --logtitle "Task log" tasks.robot
-  Challenge (Python):
-    shell: python tasks.py
-
+  entrypoint:
+    command:
+      - python
+      - tasks.py
+      
 condaConfigFile: conda.yaml
 artifactsDir: output
 ignoreFiles:

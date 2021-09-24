@@ -2,13 +2,14 @@ from RPA.Browser.Selenium import Selenium
 from RPA.Excel.Files import Files
 import time
 import os
-import pandas as pd
 
 
 class Challenge:
 
     agencies_info = {}
     uii_links = []
+    columns_names = []
+    ind_inv_table = {}
 
     def __init__(self, url):
         self.driver = Selenium()
@@ -48,6 +49,18 @@ class Challenge:
         file.rename_worksheet("Agencies", "Sheet")
         file.save()
 
+    def get_columns_names(self):
+        self.columns_names = [] # reset just in case
+        while True:
+            try:        
+                columns = self.driver.find_elements("//div[@class='dataTables_scrollHeadInner']//th")
+                if columns:   
+                    break
+            except:
+                pass
+
+        for col in columns:
+            self.columns_names.append(col.text)
 
     def scrape_table_agency(self, agency_id):
         try:
@@ -66,29 +79,30 @@ class Challenge:
         while True:
             try:
                 if self.driver.find_element('investments-table-object_next').get_attribute("class") == 'paginate_button next disabled':
-                    inv_table = self.driver.find_element('//table[@id="investments-table-object"]')
-                    self.write_table_to_excel(inv_table)
+                    self.get_columns_names()
+                    for col_name in self.columns_names:
+                        self.ind_inv_table[col_name] = []
+
+                    table_trs = self.driver.find_elements('//*[@id="investments-table-object"]/tbody/tr')
                     break
             except:
                 pass
 
 
-    def write_table_to_excel(self,table):
-        tab_html = table.get_attribute('outerHTML')
-        tab_dfs = pd.read_html(tab_html)
-
+        for tr in table_trs:
+            for i, td in enumerate(tr.find_elements_by_tag_name("td")):
+                try:
+                    self.ind_inv_table[self.columns_names[i]].append(td.text)
+                except:
+                    self.ind_inv_table[self.columns_names[i]].append("")
+                    
+        self.write_table_to_excel()
+    
+    def write_table_to_excel(self):
         file = self.excel.open_workbook(f"output/challenge.xlsx")
         file.create_worksheet("Individual Investments")
-        # df = pd.DataFrame(columns=tab_dfs[0].columns)
-
-        # for row in tab_dfs[0].iterrows:    
-        #     df.append(row)
-
-        #file.append_worksheet("Individual Investments", tab_dfs[0])
-
-        with pd.ExcelWriter('output/challenge.xlsx', mode='a') as writer:  
-            tab_dfs[0].to_excel(writer, sheet_name='Individual Investments')
-
+        file.append_worksheet("Individual Investments", self.ind_inv_table, self.columns_names)
+        file.save()
 
     def get_uii_links(self):
         all_uiis = self.driver.find_elements('//*[@id="investments-table-object"]/tbody/tr/td[1]/a')
